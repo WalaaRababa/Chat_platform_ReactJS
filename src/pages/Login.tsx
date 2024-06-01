@@ -1,4 +1,7 @@
+import axios from "axios";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 interface Inputs{
 email:string;
@@ -6,9 +9,28 @@ password:string
 }
 const Login = () => {
 const {register,handleSubmit,formState:{errors}}=useForm<Inputs>()
-const onSubmit:SubmitHandler<Inputs>=(data)=>
+const [message , setMessage ] = useState<string>("")
+const navigate=useNavigate()
+
+const onSubmit:SubmitHandler<Inputs>=async(data)=>
   {
-    console.log(data);
+    try {
+      const response = await axios.post('http://localhost:3000/login', data);
+       const accessToken = response.data.access_token;
+      console.log(accessToken);
+      navigate('/')
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.data) {
+          console.log(error.response.data.message);
+          setMessage(error.response.data.message)
+        } else {
+          console.log(error.message);
+        }
+      } else {
+        console.log('An unexpected error occurred.');
+      }
+    }
     
   }
   return (
@@ -79,6 +101,8 @@ const onSubmit:SubmitHandler<Inputs>=(data)=>
           >
             Sign in
           </button>
+          {message&& <span className="text-red-500 text-lg">{message}</span>}
+
         </div>
       </form>
 

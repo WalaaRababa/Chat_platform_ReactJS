@@ -1,4 +1,7 @@
+import axios from 'axios';
+import { useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 interface IFormInputs {
   username: string;
   email: string;
@@ -7,16 +10,32 @@ interface IFormInputs {
 }
 const SignUp = () => {
   const { register, handleSubmit, formState: { errors,isSubmitting } ,getValues} = useForm<IFormInputs>();
-
-  const onSubmit:SubmitHandler<IFormInputs>= (data) => {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        console.log(data);
-        resolve();
-      }, 1000);
-    });
+const [message , setMessage ] = useState<string>("")
+const navigate=useNavigate()
+  const onSubmit:SubmitHandler<IFormInputs>= async(data) => {
+    try {
+      const response = await axios.post('http://localhost:3000/register', data);
+      
+      // Assuming the access token is in the response data
+      const accessToken = response.data.access_token;
+      console.log(accessToken);
+      navigate('/')
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.data) {
+          console.log(error.response.data.message);
+          setMessage(error.response.data.message)
+        } else {
+          console.log(error.message);
+        }
+      } else {
+        console.log('An unexpected error occurred.');
+        setMessage('An unexpected error occurred.')
+      }
+    }
   };
-  
+   
+
 
   return (
 <div className="flex justify-center items-center h-screen ">
@@ -84,7 +103,10 @@ const SignUp = () => {
         <button type="submit" disabled={isSubmitting} className={`w-full py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
         {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
+        {message&& <span className="text-red-500 text-md">{message}</span>}
+
       </form>
+
     </div>
   );
 };
